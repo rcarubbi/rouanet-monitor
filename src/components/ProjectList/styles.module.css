@@ -1,0 +1,24 @@
+ 
+.projectsGrid {
+    border-collapse: collapse;
+    margin: 1em;
+}
+
+.projectsGrid, td, th {
+    border: solid 1px black;
+    padding-left: 1em;
+    padding-right: 1em;
+}
+
+.projectsGrid tr:hover{
+    background-color: rgb(235, 234, 227)
+}
+
+.projectsGrid td:first-child {
+    text-align: left;
+}
+
+.container {
+    height: 50%;
+    overflow-y: auto;
+}

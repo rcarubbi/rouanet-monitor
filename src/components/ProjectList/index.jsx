@@ -1,5 +1,6 @@
 import React, { Component } from "react";
-import styles from "./styles.css";
+import axios  from "axios";
+import styles from "./styles.module.css";
 
 class ProjectList extends Component {
     constructor(props) {
@@ -7,31 +8,88 @@ class ProjectList extends Component {
         this.state = {
           error: null,
           isLoaded: false,
-          projects: []
+          projects: [],
+          targetUrl: `http://api.salic.cultura.gov.br/v1/projetos?format=json&limit=10&sort=valor_aprovado:desc`,
+          prev: "",
+          next: "",
         };
       }
 
+    
     componentDidMount() {
-        const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-        const targetUrl = "http://api.salic.cultura.gov.br/v1/projetos?format=json&sort=valor_aprovado:desc";
-        fetch(proxyUrl + targetUrl)
-            .then(res => res.json())
-            .then(
-                (result) => {
-                    this.setState({
-                        isLoaded: true,
-                        projects: result._embedded.projetos
-                    })
-                },
-                (error) => {
-                    this.setState({
-                        isLoaded: true,
-                        error
-                    });
-                }
-            )
+        axios.get(`https://cors-escape.herokuapp.com/${this.state.targetUrl}`)
+        .then(
+            (result) => {
+                console.log(this.state);
+                this.setState({
+                    isLoaded: true,
+                    projects: result.data._embedded.projetos,
+                    next: result.data._links.next,
+                    prev: result.data._links.prev
+                })
+            }
+        ).catch(
+            (error) => {
+                this.setState({
+                    isLoaded: true,
+                    error
+                });
+            }
+        );
     }
 
+  
+    anterior = (event) => {
+       this.setState({
+           isLoaded: false
+       })
+        
+        axios.get(`https://cors-escape.herokuapp.com/${this.state.prev}`)
+        .then(
+            (result) => {
+                console.log(this.state);
+                this.setState({
+                    isLoaded: true,
+                    projects: result.data._embedded.projetos,
+                    next: result.data._links.next,
+                    prev: result.data._links.prev
+                })
+            }
+        ).catch(
+            (error) => {
+                this.setState({
+                    isLoaded: true,
+                    error
+                });
+            }
+        );
+    }
+    proxima = (event) => {
+        this.setState({
+            isLoaded: false
+        })
+         
+        axios.get(`https://cors-escape.herokuapp.com/${this.state.next}`)
+        .then(
+            (result) => {
+                console.log(this.state);
+                this.setState({
+                    isLoaded: true,
+                    projects: result.data._embedded.projetos,
+                    next: result.data._links.next,
+                    prev: result.data._links.prev
+                })
+            }
+        ).catch(
+            (error) => {
+                this.setState({
+                    isLoaded: true,
+                    error
+                });
+            }
+        );
+        
+    }
     render() {
         const { error, isLoaded, projects } = this.state;
         if (error) {
@@ -40,17 +98,30 @@ class ProjectList extends Component {
             return <div>Loading...</div>;
         } else {
             return (
-                <table className={styles.projectsGrid}>
-                    <tbody>
-                        {projects.map(item => (
-                            <tr key={item.PRONAC}>
-                                <td>{item.nome}</td>
-                                <td>{item.cgccpf}</td>
-                                <td>{item.valor_aprovado}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                <div>
+                    <div className={styles.container}>
+                        <table className={styles.projectsGrid}>
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>CNPJ</th>
+                                    <th>Valor Aprovado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {projects.map(item => (
+                                    <tr key={item.PRONAC}>
+                                        <td>{item.nome}</td>
+                                        <td>{item.cgccpf}</td>
+                                        <td>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.valor_aprovado)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                    <button onClick={this.anterior}>Anterior</button>
+                    <button onClick={this.proxima}>Próxima</button>
+                </div>
             );
         }
     }
